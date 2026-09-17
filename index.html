@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Markdown Speedrun</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=JetBrains+Mono:wght@400;600&family=Source+Serif+4:ital,wght@0,400;0,700;1,400&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<style>
+:root{
+  --ground:#E9EDF2; --panel:#FFFFFF; --ink:#18202C; --muted:#5B6678; --line:#CBD3DE;
+  --hi:#FFE14D; --hi-ink:#18202C; --accent:#2346C9; --good:#1B8A4B; --bad:#B4372F;
+  --code-bg:#F1F3F7;
+  --display:"Bricolage Grotesque", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  --serif:"Source Serif 4", Georgia, serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#10141B; --panel:#1A202A; --ink:#E6EAF0; --muted:#95A0B2; --line:#2E3746;
+    --hi:#F5D63A; --hi-ink:#10141B; --accent:#8BA6FF; --good:#4CC784; --bad:#F07A70; --code-bg:#232A36;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#10141B; --panel:#1A202A; --ink:#E6EAF0; --muted:#95A0B2; --line:#2E3746;
+  --hi:#F5D63A; --hi-ink:#10141B; --accent:#8BA6FF; --good:#4CC784; --bad:#F07A70; --code-bg:#232A36;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--serif);font-size:16px;padding:0 16px;padding-block:20px 40px}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1.brand{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);letter-spacing:-.02em;margin:0;line-height:1}
+h1.brand .hash{background:var(--hi);color:var(--hi-ink);padding:0 .15em;font-family:var(--mono);font-weight:600;margin-right:.1em}
+.stats{display:flex;gap:18px;font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.stats b{display:block;color:var(--ink);font-size:22px;font-weight:600}
+.stats .low b{color:var(--bad)}
+.track{position:relative;height:74px;background:#2B313B;border-radius:4px;overflow:hidden;image-rendering:pixelated}
+.track::before{content:"";position:absolute;left:0;right:0;top:44px;height:4px;background:repeating-linear-gradient(90deg,#F2F2F2 0 16px,transparent 16px 32px)}
+.track::after{content:"";position:absolute;left:0;right:0;bottom:0;height:8px;background:repeating-linear-gradient(90deg,#4E9A3A 0 8px,#3C7D2C 8px 16px)}
+.finish{position:absolute;right:0;top:0;bottom:8px;width:16px;background:conic-gradient(#fff 25%,#111 0 50%,#fff 0 75%,#111 0) 0 0/8px 8px}
+.car{position:absolute;top:22px;left:0;width:72px;height:30px;transition:left .7s steps(10);z-index:2}
+.car.zoom{animation:bob .18s steps(2) 4}
+@keyframes bob{50%{transform:translateY(-3px)}}
+.marks{position:absolute;left:0;right:16px;top:8px;height:8px}
+.marks i{position:absolute;width:8px;height:8px;margin-left:-4px;background:#566070}
+.marks i.done{background:#5BD16B}.marks i.skip{background:#C9A33A}.marks i.now{background:#FFD23F}
+@media (prefers-reduced-motion:reduce){.car{transition:none}.car.zoom{animation:none}}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:disabled:hover{border-color:var(--line)}
+.lesson{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:baseline}
+.lesson .lvl{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lesson h2{font-family:var(--display);font-weight:500;font-size:24px;margin:0;text-wrap:balance}
+.rule{font-family:var(--mono);font-size:14px;background:var(--hi);color:var(--hi-ink);padding:6px 10px;border-radius:4px;white-space:pre-wrap}
+.board{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:720px){.board{grid-template-columns:1fr}}
+.pane{background:var(--panel);border:1px solid var(--line);border-radius:6px;display:flex;flex-direction:column;min-height:220px}
+.pane .tag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
+.pane.target{grid-column:1/-1;min-height:0}
+.rendered{padding:14px 18px;line-height:1.5;overflow-wrap:anywhere}
+.rendered > :first-child{margin-top:0}.rendered > :last-child{margin-bottom:0}
+.rendered h1,.rendered h2,.rendered h3{font-family:var(--display);line-height:1.15;margin:.2em 0 .4em}
+.rendered a{color:var(--accent)}
+.rendered code{font-family:var(--mono);font-size:.88em;background:var(--code-bg);padding:1px 5px;border-radius:3px}
+.rendered pre{background:var(--code-bg);padding:10px 12px;border-radius:4px;overflow-x:auto}
+.rendered pre code{background:none;padding:0}
+.rendered hr{border:0;border-top:2px solid var(--line);margin:12px 0}
+.rendered table{border-collapse:collapse}
+.rendered th,.rendered td{border:1px solid var(--line);padding:4px 10px;text-align:left}
+.rendered ul,.rendered ol{padding-left:1.4em;margin:.3em 0}
+.rendered li:has(> input){list-style:none;margin-left:-1.2em}
+.rendered th[align="center"],.rendered td[align="center"]{text-align:center}.rendered th[align="right"],.rendered td[align="right"]{text-align:right}
+.rendered .footnotes{border-top:1px solid var(--line);margin-top:10px;padding-top:6px;font-size:.85em;color:var(--muted)}
+.rendered del{color:var(--muted)}
+.imgph{display:inline-flex;align-items:center;gap:6px;border:1px dashed var(--muted);border-radius:4px;padding:18px 16px;font-family:var(--mono);font-size:13px;color:var(--muted)}
+.rendered blockquote{margin:0;padding-left:14px;border-left:3px solid var(--hi);color:var(--muted);font-style:italic}
+textarea{flex:1;width:100%;border:0;resize:none;background:transparent;color:var(--ink);font-family:var(--mono);font-size:15px;line-height:1.6;padding:14px;min-height:170px}
+textarea:focus{outline:none}
+.pane:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 25%,transparent)}
+.status{font-family:var(--mono);font-size:11px}
+.status.ok{color:var(--good)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button{font-family:var(--mono);font-size:14px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 14px;border-radius:5px;cursor:pointer}
+button:hover{border-color:var(--ink)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.note{font-size:14px;color:var(--muted)}
+.flash{animation:flash .5s ease}
+@keyframes flash{0%{box-shadow:0 0 0 0 var(--good)}100%{box-shadow:0 0 0 14px transparent}}
+@media (prefers-reduced-motion:reduce){.flash{animation:none}}
+.end{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:22px}
+.end h2{font-family:var(--display);font-weight:800;font-size:34px;margin:0 0 6px}
+.cheat{width:100%;border-collapse:collapse;margin-top:16px;font-size:15px}
+.cheat td{padding:8px 6px;border-top:1px solid var(--line);vertical-align:top}
+.cheat td:first-child{font-family:var(--mono);font-size:13px;white-space:pre-wrap;width:48%}
+.tablewrap{overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 class="brand"><span class="hash">#</span>Markdown Speedrun</h1>
+    <div class="stats">
+      <div id="timeBox">time<b id="time">0:00</b></div>
+      <div>cleared<b id="cleared">0</b></div>
+      <div>score<b id="score">0</b></div>
+    </div>
+  </header>
+  <div class="track" role="progressbar" aria-label="Level progress" id="track"><div class="marks" id="marks"></div><div class="finish"></div><svg class="car" id="car" viewBox="0 0 24 10" shape-rendering="crispEdges" aria-hidden="true"></svg></div>
+
+  <section id="game" class="wrap" style="gap:14px">
+    <div class="lesson">
+      <span class="lvl" id="lvl">Level 1 of 26</span>
+      <h2 id="title">Make a heading</h2>
+    </div>
+    <div class="rule" id="rule"></div>
+    <div class="board">
+      <div class="pane target">
+        <div class="tag"><span>Target — make yours look like this</span></div>
+        <div class="rendered" id="target"></div>
+      </div>
+      <div class="pane">
+        <div class="tag"><span>You type markdown</span><span class="status" id="status">not yet</span></div>
+        <textarea id="input" spellcheck="false" autocomplete="off" aria-label="Markdown input"></textarea>
+      </div>
+      <div class="pane" id="previewPane">
+        <div class="tag"><span>Your preview</span></div>
+        <div class="rendered" id="preview"></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="back">← Go back</button>
+      <button id="reveal">Show answer (−50)</button>
+      <button id="skip">Skip level</button>
+      <span class="note">Clock starts on your first keystroke. Match = +100, plus a speed bonus.</span>
+    </div>
+  </section>
+
+  <section id="end" class="end" hidden>
+    <h2 id="endTitle">Run complete</h2>
+    <p class="note" id="endSummary"></p>
+    <div class="actions"><button class="primary" id="again">Play again</button></div>
+    <div class="tablewrap">
+      <table class="cheat" id="cheat"></table>
+    </div>
+  </section>
+</div>
+
+<script>
+const LEVELS = [
+  {t:"Make a heading", rule:"A hash and a space makes the biggest heading:\n# Heading", md:"# Grocery List"},
+  {t:"Smaller headings", rule:"More hashes = smaller heading (up to 6):\n## Section\n### Subsection", md:"## Produce\n### Fruit"},
+  {t:"Two paragraphs", rule:"One Enter keeps lines in the SAME paragraph.\nLeave a blank line between them to start a new one.", md:"First paragraph.\n\nSecond paragraph."},
+  {t:"Make a word bold", rule:"Wrap text in two asterisks: **bold**", md:"I **really** need coffee."},
+  {t:"Make a word italic", rule:"Wrap text in one asterisk (or underscore): *italic*", md:"This is *very* important."},
+  {t:"Bold and italic at once", rule:"Three asterisks on each side: ***both***", md:"Do ***not*** press the red button."},
+  {t:"Strikethrough", rule:"Two tildes on each side: ~~crossed out~~", md:"The meeting is ~~Tuesday~~ Wednesday."},
+  {t:"Bulleted list", rule:"Start each line with a dash and a space:\n- item", md:"- eggs\n- milk\n- bread"},
+  {t:"Numbered list", rule:"Start each line with a number, a period, and a space:\n1. first", md:"1. Wake up\n2. Make coffee\n3. Write docs"},
+  {t:"Nested list", rule:"Indent a dash by two spaces to tuck it under the item above:\n- parent\n  - child", md:"- Fruit\n  - apple\n  - pear\n- Veggies"},
+  {t:"Task list", rule:"A dash, then [ ] for open or [x] for done:\n- [x] finished\n- [ ] not yet", md:"- [x] Learn markdown\n- [ ] Take a nap"},
+  {t:"Add a link", rule:"[text people see](web address)\n\nText: Claude\nURL:  https://claude.ai", md:"Say hi to [Claude](https://claude.ai)."},
+  {t:"Bare link", rule:"Wrap a web address in angle brackets to make it clickable as-is:\n<address>\n\nURL: https://www.markdownguide.org", md:"Docs: <https://www.markdownguide.org>"},
+  {t:"Add an image", rule:"Like a link, with ! in front: ![description](image address)\n\nDescription: A happy cat\nURL: https://example.com/cat.png", md:"![A happy cat](https://example.com/cat.png)"},
+  {t:"Inline code", rule:"Wrap code in single backticks: `code`", md:"Run `npm install` first."},
+  {t:"Code block", rule:"Three backticks on the line above and below.\nYou can name the language after the first three.\n```js\ncode here\n```", md:"```js\nconsole.log(\"hi\");\n```"},
+  {t:"Blockquote", rule:"Start the line with a greater-than sign: > quote", md:"> Less is more."},
+  {t:"Divider line", rule:"Three dashes on their own line: ---\nLeave blank lines around it — right under text, --- turns that text into a heading.", md:"Above\n\n---\n\nBelow"},
+  {t:"Table", rule:"Pipes separate columns; a row of dashes goes under the header:\n| A | B |\n|---|---|\n| 1 | 2 |", md:"| Pet | Age |\n|---|---|\n| Rex | 3 |\n| Tom | 5 |"},
+  {t:"Escape a symbol", rule:"A backslash shows a symbol literally instead of formatting: \\*\nMake the asterisks show up — no italics.", md:"I love \\*stars\\*"},
+  {t:"Line break", rule:"A single Enter doesn't start a new line on its own.\nEnd a line with a backslash \\ (or two spaces) to break it without a new paragraph.", md:"Roses are red,\\\nViolets are blue."},
+  {t:"Reference-style link", rule:"Put a label in the text, and the address on its own line below:\n[text][label]\n\n[label]: address\n\nText: guide · Label: 1\nURL: https://www.markdownguide.org", md:"Read the [guide][1].\n\n[1]: https://www.markdownguide.org", must:[/\]\s*\[[^\]]+\]/, /^\s*\[[^\]]+\]:\s*\S/m], mustMsg:"use the [text][label] style"},
+  {t:"Align table columns", rule:"Colons in the dash row set alignment:\n:--- left   :---: center   ---: right", md:"| Item | Qty | Price |\n|:---|:---:|---:|\n| Tea | 2 | $4 |"},
+  {t:"Footnote", rule:"Mark the spot with [^1], then define it on its own line:\n[^1]: the note text", md:"Markdown is easy[^1].\n\n[^1]: Mostly."},
+  {t:"More inside a list item", rule:"Leave a blank line, then indent the extra paragraph two spaces so it stays inside the bullet.", md:"- Step one\n\n  Details about step one.\n\n- Step two"},
+  {t:"Boss level: combine them", rule:"Everything you've learned. Watch the blank lines between blocks.\n\nLink text: docs\nURL: https://example.com", md:"## Launch Plan\n\nShip it **today**, not ~~tomorrow~~.\n\n- [x] Read the [docs](https://example.com)\n- [ ] Run `deploy`"}
+];
+const $ = id => document.getElementById(id);
+let answers = [], elapsed = 0, idx, results, score, left, started, timer, levelStart;
+
+function show(el, html){
+  el.innerHTML = html;
+  el.querySelectorAll("img").forEach(img=>{
+    const f = document.createElement("span"); f.className = "imgph";
+    f.textContent = "🖼 " + (img.getAttribute("alt")||"image"); img.replaceWith(f);
+  });
+}
+function render(md){
+  const defs = {}, order = [];
+  const body = md.replace(/^\[\^([^\]\s]+)\]:[ \t]*(.+)$/gm, (_, id, text) => { defs[id] = text; return ""; });
+  const withRefs = body.replace(/\[\^([^\]\s]+)\]/g, (m, id) => {
+    if(!(id in defs)) return m;
+    if(!order.includes(id)) order.push(id);
+    const n = order.indexOf(id) + 1;
+    return `<sup><a href="#fn-${n}">${n}</a></sup>`;
+  });
+  let html = marked.parse(withRefs, {gfm:true, breaks:false});
+  if(order.length) html += `<section class="footnotes"><ol>${order.map((id,i)=>`<li id="fn-${i+1}">${marked.parseInline(defs[id])}</li>`).join("")}</ol></section>`;
+  return html;
+}
+function signature(html){
+  const d = document.createElement("div"); d.innerHTML = html;
+  const walk = n => {
+    if(n.nodeType === 3){ const s = n.textContent.replace(/\s+/g," "); return s.trim() ? s : ""; }
+    if(n.nodeType !== 1) return "";
+    const tag = n.tagName.toLowerCase();
+    let attr = "";
+    if(tag === "a") attr = "[" + (n.getAttribute("href")||"").replace(/\/$/,"") + "]";
+    if(tag === "img") attr = "[" + (n.getAttribute("src")||"") + "|" + (n.getAttribute("alt")||"").trim() + "]";
+    if(tag === "th" || tag === "td") attr = "[" + (n.getAttribute("align") || n.style.textAlign || "") + "]";
+    if(tag === "input") attr = n.hasAttribute("checked") ? "[x]" : "[ ]";
+    return "<"+tag+attr+">" + [...n.childNodes].map(walk).join("") + "</"+tag+">";
+  };
+  return [...d.childNodes].map(walk).join("").replace(/\s+/g," ").replace(/> </g,"><").trim();
+}
+
+const CAR = [
+  "..........KKKKKK........",
+  ".........KRWWWWWK.......",
+  "........KRRWWWWWWK......",
+  "..KKKKKKRRRRRRRRRRKKKK..",
+  ".KRRRRRRRRRRRRRRRRRRRRK.",
+  "KRRRRRRRRRRRRRRRRRRRRRYK",
+  "KDDRRRRRRRRRRRRRRRRRRRRK",
+  "KDDKKKDDDDDDDDDDDKKKDDDK",
+  "..KGGGK.........KGGGK...",
+  "...KKK...........KKK...."
+];
+const PAL = {K:"#111418",R:"#E8302A",D:"#9E1B16",W:"#9FE3FF",Y:"#FFD23F",G:"#A9B1BC"};
+$("car").innerHTML = CAR.flatMap((row,y)=>[...row].map((c,x)=>PAL[c]?`<rect x="${x}" y="${y}" width="1" height="1" fill="${PAL[c]}"/>`:"")).join("");
+const pos = (f, w) => `calc((100% - 16px - ${w}px) * ${f})`;
+function buildProgress(finished){
+  const n = LEVELS.length, frac = finished ? 1 : idx/(n-1);
+  $("car").style.left = finished ? "calc(100% - 72px)" : pos(frac, 72);
+  $("track").setAttribute("aria-valuenow", idx+1); $("track").setAttribute("aria-valuemax", n);
+  $("marks").innerHTML = LEVELS.map((_,i)=>{
+    const r = results[i]; const cls = r==="done"?"done":r==="skip"?"skip":(i===idx&&!finished)?"now":"";
+    return `<i class="${cls}" style="left:calc(36px + (100% - 72px) * ${i/(n-1)})"></i>`;
+  }).join("");
+}
+function zoom(){ const c=$("car"); c.classList.remove("zoom"); void c.getBoundingClientRect(); c.classList.add("zoom"); }
+function load(){
+  const L = LEVELS[idx];
+  $("lvl").textContent = `Level ${idx+1} of ${LEVELS.length}`;
+  $("title").textContent = L.t;
+  $("rule").textContent = L.rule;
+  show($("target"), render(L.md));
+  $("input").value = answers[idx] || "";
+  show($("preview"), render($("input").value));
+  const done = results[idx] === "done";
+  $("status").textContent = done ? "match ✓" : "not yet"; $("status").className = done ? "status ok" : "status";
+  $("back").disabled = idx === 0;
+  $("skip").textContent = done ? "Next level →" : "Skip level";
+  levelStart = elapsed;
+  buildProgress(); $("input").focus();
+}
+function tick(){ elapsed++; showTime(); }
+function fmt(t){ const h = Math.floor(t/3600), m = Math.floor(t%3600/60), s = String(t%60).padStart(2,"0"); return h ? `${h}:${String(m).padStart(2,"0")}:${s}` : `${m}:${s}`; }
+function showTime(){
+  $("time").textContent = fmt(elapsed);
+}
+function check(){
+  if(!started){ started = true; timer = setInterval(tick,1000); }
+  const L = LEVELS[idx];
+  answers[idx] = $("input").value;
+  const html = render($("input").value);
+  show($("preview"), html);
+  if(results[idx] === "done") return;
+  const styleOk = !L.must || L.must.every(r => r.test($("input").value));
+  const same = signature(html) === signature(render(L.md));
+  if(same && !styleOk){ $("status").textContent = "looks right — now " + L.mustMsg; return; }
+  if(same){
+    const bonus = L.revealed ? 0 : Math.max(0, 50 - (elapsed - levelStart) * 2);
+    score += (L.revealed ? 50 : 100) + bonus;
+    results[idx] = "done";
+    $("status").textContent = "match ✓"; $("status").className = "status ok";
+    $("previewPane").classList.remove("flash"); void $("previewPane").offsetWidth; $("previewPane").classList.add("flash");
+    updateStats(); zoom();
+    if(L.revealed){ $("skip").textContent = "Next level →"; $("skip").focus(); }
+    else { const at = idx; setTimeout(()=>{ if(idx === at) next(); }, 650); }
+  } else {
+    $("status").textContent = $("input").value.trim() ? "keep going" : "not yet";
+  }
+}
+function updateStats(){
+  $("score").textContent = score;
+  $("cleared").textContent = results.filter(r=>r==="done").length;
+}
+function next(){
+  idx++;
+  if(idx >= LEVELS.length) finish(false); else load();
+}
+function finish(){
+  clearInterval(timer);
+  $("game").hidden = true; $("end").hidden = false;
+  buildProgress(true);
+  const cleared = results.filter(r=>r==="done").length;
+  $("endTitle").textContent = cleared === LEVELS.length ? "You speak markdown" : "Run complete";
+  $("endSummary").textContent = `${cleared} of ${LEVELS.length} levels cleared in ${fmt(elapsed)} · score ${score}. Here's your cheat sheet — type left, get right.`;
+  $("cheat").innerHTML = LEVELS.map(L=>`<tr><td></td><td class="rendered"></td></tr>`).join("");
+  [...$("cheat").rows].forEach((row,i)=>{ row.cells[0].textContent = LEVELS[i].md; show(row.cells[1], render(LEVELS[i].md)); });
+}
+function start(){
+  idx = 0; results = LEVELS.map(()=>null); answers = []; LEVELS.forEach(L=>L.revealed=false); score = 0; elapsed = 0; started = false;
+  clearInterval(timer); showTime(); updateStats();
+  $("game").hidden = false; $("end").hidden = true;
+  load();
+}
+$("input").addEventListener("input", check);
+$("input").addEventListener("keydown", e=>{
+  if(e.key === "Tab"){ e.preventDefault(); e.target.setRangeText("  ", e.target.selectionStart, e.target.selectionEnd, "end"); check(); }
+});
+$("reveal").addEventListener("click", ()=>{
+  const L = LEVELS[idx]; if(L.revealed || results[idx] === "done") return;
+  L.revealed = true; score = Math.max(0, score - 50); updateStats();
+  $("input").value = L.md; $("input").focus();
+  check();
+});
+$("skip").addEventListener("click", ()=>{ if(results[idx] !== "done") results[idx] = "skip"; next(); });
+$("back").addEventListener("click", ()=>{ if(idx > 0){ idx--; load(); } });
+$("again").addEventListener("click", start);
+start();
+</script>
+</body>
+</html>
