@@ -52,11 +52,22 @@ button:disabled:hover{border-color:var(--line)}
 .lesson .lvl{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .lesson h2{font-family:var(--display);font-weight:500;font-size:24px;margin:0;text-wrap:balance}
 .rule{font-family:var(--mono);font-size:14px;background:var(--hi);color:var(--hi-ink);padding:6px 10px;border-radius:4px;white-space:pre-wrap}
-.board{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media (max-width:720px){.board{grid-template-columns:1fr}}
+.step{display:grid;grid-template-columns:64px 1fr;gap:14px;align-items:start}
+.stepno{display:flex;flex-direction:column;align-items:center;gap:5px}
+.stepno b{font-family:var(--mono);font-size:17px;font-weight:600;width:34px;height:34px;display:grid;place-items:center;background:var(--hi);color:var(--hi-ink);border:2px solid var(--ink)}
+.stepno span{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:center;line-height:1.25}
+.panes{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:720px){
+  .panes{grid-template-columns:1fr}
+  .step{grid-template-columns:1fr;gap:8px}
+  .stepno{flex-direction:row;justify-content:flex-start;gap:10px}
+  .stepno b{width:28px;height:28px;font-size:15px}
+  .stepno:empty{display:none}
+}
 .pane{background:var(--panel);border:1px solid var(--line);border-radius:6px;display:flex;flex-direction:column;min-height:220px}
 .pane .tag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
-.pane.target{grid-column:1/-1;min-height:0}
+.pane.tight{min-height:0}
+.step:has(> .hint[hidden]){display:none}
 .rendered{padding:14px 18px;line-height:1.5;overflow-wrap:anywhere}
 .rendered > :first-child{margin-top:0}.rendered > :last-child{margin-bottom:0}
 .rendered h1,.rendered h2,.rendered h3{font-family:var(--display);line-height:1.15;margin:.2em 0 .4em}
@@ -122,29 +133,38 @@ button.primary{background:var(--ink);color:var(--ground);border-color:var(--ink)
       <span class="lvl" id="lvl">Level 1 of 26</span>
       <h2 id="title">Make a heading</h2>
     </div>
-    <div class="rule" id="rule"></div>
-    <div class="board">
-      <div class="pane target">
+    <div class="step">
+      <div class="stepno"><b>1</b><span>The lesson</span></div>
+      <div class="rule" id="rule"></div>
+    </div>
+    <div class="step">
+      <div class="stepno"><b>2</b><span>An example</span></div>
+      <div class="pane tight">
         <div class="tag"><span>Target — make yours look like this</span></div>
         <div class="rendered" id="target"></div>
       </div>
-      <div class="pane">
-        <div class="tag"><span>You type markdown</span><span class="status" id="status">not yet</span></div>
-        <textarea id="input" spellcheck="false" autocomplete="off" aria-label="Markdown input"></textarea>
-      </div>
-      <div class="pane" id="previewPane">
-        <div class="tag"><span>Your preview</span></div>
-        <div class="rendered" id="preview"></div>
+    </div>
+    <div class="step">
+      <div class="stepno"><b>3</b><span>You try it</span></div>
+      <div class="panes">
+        <div class="pane">
+          <div class="tag"><span>You type markdown</span><span class="status" id="status">not yet</span></div>
+          <textarea id="input" spellcheck="false" autocomplete="off" aria-label="Markdown input"></textarea>
+        </div>
+        <div class="pane" id="previewPane">
+          <div class="tag"><span>Your preview</span></div>
+          <div class="rendered" id="preview"></div>
+        </div>
       </div>
     </div>
-    <div class="actions">
+    <div class="step"><div class="stepno"></div><div class="actions">
       <button id="back">← Go back</button>
       <button id="why">What am I doing wrong?</button>
       <button id="reveal">Show answer (−50)</button>
       <button id="skip">Skip level</button>
       <span class="note">Clock starts on your first keystroke. Match = +100, plus a speed bonus.</span>
-    </div>
-    <div class="hint" id="hint" hidden></div>
+    </div></div>
+    <div class="step"><div class="stepno"></div><div class="hint" id="hint" hidden></div></div>
   </section>
 
   <section id="end" class="end" hidden>
