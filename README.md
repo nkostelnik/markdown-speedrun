@@ -1,7 +1,8 @@
-[README.md](https://github.com/user-attachments/files/32317543/README.md)
 # Markdown Speedrun
 
-A browser typing game that teaches Markdown in 26 levels. Each level shows one rule and a target. You type Markdown, watch your preview update as you go, and move on as soon as your output matches.
+**Learn every piece of Markdown in about 10 minutes — and have fun doing it.**
+
+A browser typing game in 26 tiny levels. Each level shows one rule and a target. You type Markdown, watch your preview update as you go, and move on as soon as your output matches. Stuck? Click **What am I doing wrong?** and the game tells you what to fix.
 
 **Play it:** https://nkostelnik.github.io/markdown-speedrun/
 
@@ -9,6 +10,7 @@ A browser typing game that teaches Markdown in 26 levels. Each level shows one r
 
 - A stopwatch starts on your first keystroke.
 - A match earns **+100 points**, plus a speed bonus for solving a level quickly.
+- **What am I doing wrong?** checks your attempt against the target and names the fix — a missing space after a `#`, an unclosed `**`, a missing blank line.
 - **Show answer** fills in the solution (−50) and waits for you to click **Next level**.
 - **Skip level** and **Go back** let you move freely, and your work on each level is saved.
 - A pixel sports car drives toward the finish line as you progress.

@@ -29,7 +29,7 @@
 *{box-sizing:border-box}
 body{background:var(--ground);color:var(--ink);font-family:var(--serif);font-size:16px;padding:0 16px;padding-block:20px 40px}
 .wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
-header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+header{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px}
 h1.brand{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);letter-spacing:-.02em;margin:0;line-height:1}
 h1.brand .hash{background:var(--hi);color:var(--hi-ink);padding:0 .15em;font-family:var(--mono);font-weight:600;margin-right:.1em}
 .stats{display:flex;gap:18px;font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -85,6 +85,12 @@ button:hover{border-color:var(--ink)}
 button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 button.primary{background:var(--ink);color:var(--ground);border-color:var(--ink)}
 .note{font-size:14px;color:var(--muted)}
+.tagline{margin:8px 0 0;max-width:56ch;color:var(--muted);font-size:15px;line-height:1.45}
+.hint{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:6px;padding:12px 16px}
+.hint h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:400}
+.hint ul{margin:0;padding-left:1.2em;line-height:1.5}
+.hint li+li{margin-top:6px}
+.hint code{font-family:var(--mono);font-size:.85em;background:var(--code-bg);padding:1px 5px;border-radius:3px}
 .flash{animation:flash .5s ease}
 @keyframes flash{0%{box-shadow:0 0 0 0 var(--good)}100%{box-shadow:0 0 0 14px transparent}}
 @media (prefers-reduced-motion:reduce){.flash{animation:none}}
@@ -99,7 +105,10 @@ button.primary{background:var(--ink);color:var(--ground);border-color:var(--ink)
 <body>
 <div class="wrap">
   <header>
-    <h1 class="brand"><span class="hash">#</span>Markdown Speedrun</h1>
+    <div>
+      <h1 class="brand"><span class="hash">#</span>Markdown Speedrun</h1>
+      <p class="tagline">Learn every piece of Markdown in about 10 minutes — 26 tiny levels, a live preview, and a car to push across the finish line. Nothing to install, nothing to sign up for.</p>
+    </div>
     <div class="stats">
       <div id="timeBox">time<b id="time">0:00</b></div>
       <div>cleared<b id="cleared">0</b></div>
@@ -130,10 +139,12 @@ button.primary{background:var(--ink);color:var(--ground);border-color:var(--ink)
     </div>
     <div class="actions">
       <button id="back">← Go back</button>
+      <button id="why">What am I doing wrong?</button>
       <button id="reveal">Show answer (−50)</button>
       <button id="skip">Skip level</button>
       <span class="note">Clock starts on your first keystroke. Match = +100, plus a speed bonus.</span>
     </div>
+    <div class="hint" id="hint" hidden></div>
   </section>
 
   <section id="end" class="end" hidden>
@@ -239,6 +250,48 @@ function buildProgress(finished){
   }).join("");
 }
 function zoom(){ const c=$("car"); c.classList.remove("zoom"); void c.getBoundingClientRect(); c.classList.add("zoom"); }
+const NAMES = {h1:"a big heading",h2:"a heading",h3:"a smaller heading",strong:"bold text",em:"italic text",del:"strikethrough text",ul:"a bulleted list",ol:"a numbered list",a:"a link",img:"an image",code:"code",pre:"a code block",blockquote:"a quote",hr:"a divider line",table:"a table",br:"a line break",sup:"a footnote mark",input:"a checkbox",p:"a paragraph"};
+const TIPS = {h1:"one # and a space: <code># Heading</code>",h2:"two hashes: <code>## Heading</code>",h3:"three hashes: <code>### Heading</code>",strong:"<code>**bold**</code>",em:"<code>*italic*</code>",del:"<code>~~crossed out~~</code>",ul:"<code>- item</code> on each line",ol:"<code>1. item</code> on each line",a:"<code>[text](https://address)</code>",img:"<code>![description](https://address)</code>",code:"backticks around it: <code>`code`</code>",pre:"three backticks on the line above and below",blockquote:"<code>&gt; quote</code>",hr:"<code>---</code> alone on a line, with blank lines around it",table:"pipes between columns and <code>|---|---|</code> under the header row",br:"end the line with a backslash",sup:"<code>[^1]</code> in the text, then <code>[^1]: the note</code> below",input:"<code>- [ ] task</code> or <code>- [x] done</code>",p:"a blank line starts a new paragraph"};
+function counts(html){
+  const d = document.createElement("div"); d.innerHTML = html; const c = {};
+  d.querySelectorAll("*").forEach(n=>{ const t = n.tagName.toLowerCase(); c[t] = (c[t]||0)+1; });
+  return c;
+}
+function plain(html){
+  const d = document.createElement("div"); d.innerHTML = html;
+  return d.textContent.replace(/\s+/g," ").trim();
+}
+function esc(t){ return t.replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+function diagnose(){
+  const L = LEVELS[idx], val = $("input").value, tips = [];
+  if(!val.trim()) return ["Type your answer in the left box. The yellow rule above shows the syntax, and the target shows what it should look like."];
+  if(/^#{1,6}[^#\s]/m.test(val)) tips.push("Put a space after the #. <code>#Heading</code> stays plain text; <code># Heading</code> becomes a heading.");
+  if(/^\s*[-*+][^\s\-*+]/m.test(val)) tips.push("Put a space after the dash: <code>- item</code>, not <code>-item</code>.");
+  if(/^\s*\d+\.[^\s]/m.test(val)) tips.push("Put a space after the number: <code>1. item</code>.");
+  if((val.match(/```/g)||[]).length % 2) tips.push("A code block needs three backticks above <em>and</em> below it.");
+  if((val.match(/\*\*/g)||[]).length % 2) tips.push("Every <code>**</code> needs a matching <code>**</code> to close it.");
+  if((val.match(/~~/g)||[]).length % 2) tips.push("Every <code>~~</code> needs a matching <code>~~</code> to close it.");
+  if(/\]\s+\(/.test(val)) tips.push("No space between the brackets: <code>[text](address)</code>.");
+  if(L.md.includes("\n\n") && !/\n[ \t]*\n/.test(val)) tips.push("Leave a blank line between the blocks. Without it they run together.");
+  const tc = counts(render(L.md)), uc = counts(render(val));
+  for(const tag in tc){
+    if(!NAMES[tag]) continue;
+    if((uc[tag]||0) < tc[tag]) tips.push(`Your answer is missing ${NAMES[tag]} — ${TIPS[tag]}.`);
+  }
+  for(const tag in uc){
+    if(!NAMES[tag] || tag === "p") continue;
+    if((tc[tag]||0) < uc[tag]) tips.push(`Your answer has ${NAMES[tag]} that the target doesn't.`);
+  }
+  const want = plain(render(L.md)), got = plain(render(val));
+  if(want !== got && tips.length < 2) tips.push(`The words don't match yet. The target reads: “${esc(want.slice(0,90))}${want.length>90?"…":""}”`);
+  if(L.must && !L.must.every(r=>r.test(val))) tips.push(`This level wants you to ${L.mustMsg}.`);
+  if(!tips.length) tips.push("You're very close. Compare your preview with the target one block at a time — the difference is usually a space or a blank line.");
+  return tips.slice(0,3);
+}
+function showHint(){
+  $("hint").innerHTML = "<h3>What to fix</h3><ul>" + diagnose().map(t=>`<li>${t}</li>`).join("") + "</ul>";
+  $("hint").hidden = false;
+}
 function load(){
   const L = LEVELS[idx];
   $("lvl").textContent = `Level ${idx+1} of ${LEVELS.length}`;
@@ -251,6 +304,7 @@ function load(){
   $("status").textContent = done ? "match ✓" : "not yet"; $("status").className = done ? "status ok" : "status";
   $("back").disabled = idx === 0;
   $("skip").textContent = done ? "Next level →" : "Skip level";
+  $("hint").hidden = true;
   levelStart = elapsed;
   buildProgress(); $("input").focus();
 }
@@ -265,6 +319,7 @@ function check(){
   answers[idx] = $("input").value;
   const html = render($("input").value);
   show($("preview"), html);
+  if(!$("hint").hidden){ if($("input").value.trim()) showHint(); else $("hint").hidden = true; }
   if(results[idx] === "done") return;
   const styleOk = !L.must || L.must.every(r => r.test($("input").value));
   const same = signature(html) === signature(render(L.md));
@@ -317,6 +372,7 @@ $("reveal").addEventListener("click", ()=>{
   check();
 });
 $("skip").addEventListener("click", ()=>{ if(results[idx] !== "done") results[idx] = "skip"; next(); });
+$("why").addEventListener("click", showHint);
 $("back").addEventListener("click", ()=>{ if(idx > 0){ idx--; load(); } });
 $("again").addEventListener("click", start);
 start();
