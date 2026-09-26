@@ -1,0 +1,8 @@
+# Markdown Speedrun
+
+> A free browser typing game that teaches Markdown syntax: type real Markdown snippets against the clock and watch them render live.
+
+Single-page app, runs entirely client-side, no signup or install.
+
+## Primary page
+- [Markdown Speedrun](https://nkostelnik.github.io/markdown-speedrun/): the game itself.
